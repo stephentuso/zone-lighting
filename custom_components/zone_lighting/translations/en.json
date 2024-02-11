@@ -1,0 +1,36 @@
+{
+  "title": "Zone Lighting",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Choose a name for this lighting zone",
+        "data": {
+          "name": "Name"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Zone Lighting options",
+        "description": "Configure a lighting zone. Option names align with the YAML settings. If you've defined this entry in YAML, no options will appear here. For further details, see the [official documentation](https://github.com/stephentuso/zone-lighting#readme).",
+        "data": {
+          "lights": "lights: Light entity ids this zone will control",
+          "scenes": "scenes: Simple scenes for this zone",
+          "script_scenes": "script_scenes: Script powered scenes for this zone",
+          "controllers": "controllers: Controllers for this zone",
+          "scripts": "scripts: Scripts to call for script scene activation/deactivation"
+        },
+        "data_description": {}
+      }
+    },
+    "error": {
+      "option_error": "Invalid option",
+      "entity_missing": "The selected light entity is missing from Home Assistant"
+    }
+  }
+}

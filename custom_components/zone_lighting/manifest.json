@@ -1,0 +1,12 @@
+{
+  "domain": "zone_lighting",
+  "name": "Zone Lighting",
+  "codeowners": [
+    "@stephentuso"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/stephentuso/zone-lighting",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/stephentuso/zone-lighting/issues",
+  "version": "0.0.0"
+}
