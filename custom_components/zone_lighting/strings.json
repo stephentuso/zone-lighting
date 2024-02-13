@@ -19,12 +19,14 @@
         "description": "Configure a lighting zone. Option names align with the YAML settings. If you've defined this entry in YAML, no options will appear here. For further details, see the [official documentation](https://github.com/stephentuso/zone-lighting#readme).",
         "data": {
           "lights": "lights: Light entity ids this zone will control",
-          "scenes": "scenes: Simple scenes for this zone",
-          "script_scenes": "script_scenes: Script powered scenes for this zone",
-          "controllers": "controllers: Controllers for this zone",
-          "scripts": "scripts: Scripts to call for script scene activation/deactivation"
+          "scenes": "scenes",
+          "event_scenes": "event_scenes",
+          "controllers": "controllers: Controllers for this zone"
         },
-        "data_description": {}
+        "data_description": {
+          "scenes": "Simple scenes for this zone, state will be saved in HA scenes",
+          "event_scenes": "Scenes that will be handled by automations"
+        }
       }
     },
     "error": {

@@ -20,9 +20,6 @@ DOCS[CONF_NAME] = "Display name for this zone"
 CONF_LIGHTS, DEFAULT_LIGHTS = "lights", []
 DOCS[CONF_LIGHTS] = "Light entity ids this zone will control"
 
-CONF_SCRIPTS, DEFAULT_SCRIPTS = "scripts", []
-DOCS[CONF_SCRIPTS] = "Scripts to call for script scene activation/deactivation"
-
 CONF_SCENES, DEFAULT_SCENES = "scenes", [""]
 DOCS[CONF_SCENES] = "Simple scenes for this zone, state will be saved in HA scenes"
 
@@ -89,15 +86,6 @@ OPTIONS_LIST = [
         select.TextSelector(select.TextSelectorConfig(
             multiple=True,
             type=select.TextSelectorType.TEXT,
-        )),
-        True,
-    ),
-        opt(
-        CONF_SCRIPTS,
-        DEFAULT_SCRIPTS,
-        cv.entity_ids,
-        select.EntitySelector(select.EntitySelectorConfig(
-            multiple=True,
         )),
         True,
     ),

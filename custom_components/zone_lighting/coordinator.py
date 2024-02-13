@@ -21,7 +21,6 @@ from homeassistant.const import (
 from .const import (
     CONF_NAME,
     CONF_LIGHTS,
-    CONF_SCRIPTS,
     CONF_SCENES_EVENT,
     DOMAIN,
     CONF_EVENT_SCENE,
@@ -68,7 +67,6 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
         self.device_identifiers = {(DOMAIN, self.config_entry.entry_id)}
         self.zone_name = self.config_data[CONF_NAME]
 
-        self._scripts = self.config_data[CONF_SCRIPTS]
         self._event_scenes = self.config_data[CONF_SCENES_EVENT]
 
         scenes = get_conf_list(self.config_data, ListType.SCENE)

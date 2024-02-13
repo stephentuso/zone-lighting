@@ -42,7 +42,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Optional(CONF_TYPE): str,
         vol.Required(CONF_EVENT_ACTION): str,
         vol.Required(CONF_EVENT_SCENE): str,
-    t p}
+    }
 )
 
 
