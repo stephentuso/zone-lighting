@@ -34,5 +34,11 @@
       "option_error": "Invalid option",
       "entity_missing": "The selected light entity is missing from Home Assistant"
     }
+  },
+  "services": {
+    "rollback_select": {
+      "name": "Rollback Select",
+      "description": "Rollback a Zone Lighting select entity to the previous value"
+    }
   }
 }
