@@ -138,8 +138,6 @@ class LightZone(ZoneLightingEntity, LightGroup, RestoreEntity):
             self.coordinator.async_set_on_state(True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        self.coordinator.async_set_on_state(True)
-
         effect = None
         effect_type = None
         if ATTR_EFFECT in kwargs:
@@ -154,6 +152,8 @@ class LightZone(ZoneLightingEntity, LightGroup, RestoreEntity):
 
         if effect_type and effect:
             self.coordinator.async_set_current_list_val(effect_type, effect)
+
+        self.coordinator.async_set_on_state(True)
 
         if self.is_manual or (effect_type == SCENE_PREFIX and effect == MANUAL):
             await self.async_proxy_turn_on(**kwargs)

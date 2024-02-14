@@ -10,7 +10,7 @@ import homeassistant.helpers.selector as select
 
 NAME = "Zone Lighting"
 DOMAIN = "zone_lighting"
-VERSION = "0.1.0"
+DEVICE_VERSION = "v1"
 
 DOCS = {}
 
@@ -107,6 +107,8 @@ CONF_EVENT_ACTION = "action"
 CONF_EVENT_SCENE = "scene"
 ACTION_ACTIVATE = "activate_scene"
 ACTION_DEACTIVATE = "deactivate_scene"
+
+SERVICE_ROLLBACK_SELECT = "rollback_select"
 
 _DOMAIN_SCHEMA = vol.Schema(
     {

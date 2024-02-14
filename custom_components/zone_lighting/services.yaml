@@ -1,0 +1,4 @@
+rollback_select:
+  target:
+    entity:
+      domain: select

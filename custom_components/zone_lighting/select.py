@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal, Mapping
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers import entity_platform, service
 from homeassistant.util import slugify
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import (
@@ -24,8 +25,9 @@ from .const import (
     DOMAIN,
     SELECT_CONTROLLER,
     SELECT_SCENE,
+    SERVICE_ROLLBACK_SELECT,
 )
-from .util import initialize_with_config, ListType, get_conf_list, get_coordinator
+from .util import get_coordinator
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -54,6 +56,14 @@ async def async_setup_entry(
         name=f"{coordinator.zone_name} Controller",
         icon="mdi:remote",
         type=MODEL_CONTROLLER
+    )
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_ROLLBACK_SELECT,
+        dict(),
+        "async_rollback_option"
     )
 
     async_add_entities(
@@ -111,7 +121,7 @@ class ZoneLightingSelect(ZoneLightingEntity, SelectEntity, RestoreEntity):
     async def async_select_option(self, option: str) -> None:
         self.coordinator.async_set_current_list_val(self._list_type, option)
 
-    async def async_rollback_option(self) -> None:
+    def async_rollback_option(self) -> None:
         self.coordinator.async_rollback_list_val(self._list_type)
 
     @property
