@@ -85,7 +85,7 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
         self._save_current_scene_debouncer = Debouncer(
             hass,
             _LOGGER,
-            cooldown=5,
+            cooldown=1,
             immediate=False,
             function=self._async_save_current_scene,
         )
@@ -127,8 +127,6 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
 
         if action == ACTION_ACTIVATE:
             self.hass.add_job(self._async_restore_scene_state, scene)
-        elif action == ACTION_DEACTIVATE:
-            self.hass.add_job(self._async_save_scene_state, scene)
 
     def _async_fire_scene_event(self, action: str, scene: str):
         if not self.device_id:
@@ -154,7 +152,6 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
         scene = self._model[MODEL_SCENE]["current"]
         if self._is_simple_scene(scene):
             self.hass.add_job(self._async_save_scene_state, scene)
-            # self._async_save_scene_state(scene)
 
     async def _async_save_scene_state(self, scene):
         if not self._model[MODEL_STATE]:

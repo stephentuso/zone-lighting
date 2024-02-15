@@ -224,6 +224,3 @@ class LightZone(ZoneLightingEntity, LightGroup, RestoreEntity):
 
         self._attr_is_on = self.coordinator.data[MODEL_STATE]
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-
-        self.coordinator.async_save_current_scene()
-
