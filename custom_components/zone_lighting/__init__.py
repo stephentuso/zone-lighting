@@ -21,7 +21,7 @@ from .coordinator import ZoneLightingCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["light", "select", "button"]
+PLATFORMS = ["light", "select", "button", "scene"]
 
 def _all_unique_names(value):
     """Validate that all entities have a unique profile name."""

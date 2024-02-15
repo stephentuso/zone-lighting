@@ -12,6 +12,7 @@ from homeassistant.core import (
     HomeAssistant
 )
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_SCENES,
@@ -27,6 +28,7 @@ from .const import (
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
+    from .coordinator import ZoneLightingCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +87,7 @@ async def initialize_with_config(
 def get_coordinator(
     hass: HomeAssistant,
     config_entry: ConfigEntry | None,
-):
+) -> ZoneLightingCoordinator:
     data = hass.data[DOMAIN]
     assert config_entry.entry_id in data
     return data[config_entry.entry_id][COORDINATOR]
@@ -107,12 +109,15 @@ select_mapping = {
 def filter_conf_list(values: list[str]):
     return list(filter(lambda value: bool(value), values))
 
+def get_conf_list_plain(data: dict[str, Any], key: str):
+    return filter_conf_list(data[key])
+
 def get_conf_list(data: dict[str, Any], type: ListType):
     all_items = [MANUAL]
     for param in conf_mapping[type]:
         if data[param]:
-            all_items += data[param]
-    return filter_conf_list(all_items)
+            all_items += get_conf_list_plain(data, param)
+    return all_items
 
 def validate_list_option(data: dict[str, Any], type: ListType, option: str):
     return option in get_conf_list(data, type)
@@ -123,9 +128,9 @@ def get_select_for_list(hass: HomeAssistant, entry_id: str, type: ListType):
 def get_current_list_option(hass: HomeAssistant, entry_id: str, type: ListType):
     return get_select_for_list(hass, entry_id, type).current_option
 
-def set_list_option(hass: HomeAssistant, entry_id: str, type: ListType, option: str):
-    validate_list_option()
-    get_select_for_list(hass, entry_id, type).async_handle_select_option(option)
+def get_scene_unique_id(entry_id: str, scene: str):
+    return f"{entry_id}_scene_{scene}"
 
-def rollback_scene(hass: HomeAssistant):
-    hass.states.async_set()
+def async_get_scene_entity_id(hass: HomeAssistant, entry_id: str, scene: str):
+    registry = er.async_get(hass)
+    return registry.async_get_entity_id("scene", DOMAIN, get_scene_unique_id(entry_id, scene))

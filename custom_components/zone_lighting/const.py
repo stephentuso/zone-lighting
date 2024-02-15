@@ -99,6 +99,7 @@ SELECT_SCENE = "select_scene"
 SELECT_CONTROLLER = "select_controller"
 
 ATTR_PREVIOUS_STATE = "previous_state"
+ATTR_ENTITIES = "entities"
 
 MANUAL = "Manual"
 

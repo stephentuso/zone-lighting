@@ -39,7 +39,6 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    _LOGGER.info("Setting up select")
     coordinator = get_coordinator(hass, config_entry)
 
     save_scene_button = SaveSceneButton(

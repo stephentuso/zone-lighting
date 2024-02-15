@@ -35,6 +35,8 @@ from .util import (
     ListType,
     MANUAL,
     get_conf_list,
+    get_conf_list_plain,
+    async_get_scene_entity_id,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 MODEL_SCENE = "scene"
 MODEL_CONTROLLER = "controller"
 MODEL_STATE = "on_state"
+MODEL_SCENE_STATES = "scene_states"
 
 class ZoneLightingCoordinator(DataUpdateCoordinator):
     """Class to manage data"""
@@ -69,8 +72,8 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
         self.device_identifiers = {(DOMAIN, self.config_entry.entry_id)}
         self.zone_name = self.config_data[CONF_NAME]
 
-        self._simple_scenes = self.config_data[CONF_SCENES]
-        self._event_scenes = self.config_data[CONF_SCENES_EVENT]
+        self._simple_scenes = get_conf_list_plain(self.config_data, CONF_SCENES)
+        self._event_scenes = get_conf_list_plain(self.config_data, CONF_SCENES_EVENT)
 
         self._scene_restored = False
 
@@ -80,13 +83,14 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
             MODEL_STATE: False,
             MODEL_SCENE: dict(values=scenes, current=None, previous=None),
             MODEL_CONTROLLER: dict(values=controllers, current=None, previous=None),
+            MODEL_SCENE_STATES: dict(),
         }
 
         self._save_current_scene_debouncer = Debouncer(
             hass,
             _LOGGER,
             cooldown=1,
-            immediate=False,
+            immediate=True,
             function=self._async_save_current_scene,
         )
 
@@ -116,6 +120,10 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
             return False
 
         return scene in self._simple_scenes
+
+    @property
+    def simple_scenes(self):
+        return self._simple_scenes
 
     def _async_handle_scene_action(self, action: str, scene: str):
         if not scene or scene == MANUAL:
@@ -151,7 +159,17 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
 
         scene = self._model[MODEL_SCENE]["current"]
         if self._is_simple_scene(scene):
-            self.hass.add_job(self._async_save_scene_state, scene)
+            entity_states = dict()
+            for entity_id in self.light_entity_ids:
+                state = self.hass.states.get(entity_id)
+                entity_states[entity_id] = {
+                    "state": state.state,
+                    **state.attributes,
+                }
+            self._model[MODEL_SCENE_STATES][scene] = entity_states
+            self._async_data_changed()
+
+            # self.hass.add_job(self._async_save_scene_state, scene)
 
     async def _async_save_scene_state(self, scene):
         if not self._model[MODEL_STATE]:
@@ -170,7 +188,14 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
 
     async def _async_restore_scene_state(self, scene):
         _LOGGER.debug(f"Restoring scene state: {scene}")
-        target = dict(entity_id=f"scene.{self._get_saved_scene_id(scene)}")
+        # target = dict(entity_id=f"scene.{self._get_saved_scene_id(scene)}")
+        # await self.hass.services.async_call("scene", "turn_on", target=target)
+        entity_id = async_get_scene_entity_id(self.hass, self.config_entry.entry_id, scene)
+        _LOGGER.debug(entity_id)
+        if not entity_id:
+            _LOGGER.debug("Can't save, no entity id")
+            return
+        target = dict(entity_id=entity_id)
         await self.hass.services.async_call("scene", "turn_on", target=target)
         self._scene_restored = True
 
@@ -206,6 +231,19 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
     def async_rollback_list_val(self, type: str):
         list_model = self._model[type]
         self.async_set_current_list_val(type, list_model['previous'])
+
+    def get_scene_states(self, scene: str):
+        if not self.data:
+            return None
+        if scene not in self.data[MODEL_SCENE_STATES]:
+            return None
+        return self.data[MODEL_SCENE_STATES][scene]
+
+    def async_set_scene_states(self, scene: str, states: dict[str, any]):
+        self._model[MODEL_SCENE_STATES][scene] = states
+        self._async_data_changed()
+        if self._model[MODEL_STATE] and self._model[MODEL_SCENE]["current"] == scene:
+            self.hass.add_job(self._async_restore_scene_state, scene)
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
