@@ -1,7 +1,7 @@
 colorlog==6.7.0
 homeassistant==2024.2.1
 pip>=21.0,<23.2
-ruff==0.0.292
+ruff==0.4.1
 
 # Install HA and test dependencies (pytest, coverage)
 # To pin the dev container to a specific HA version, set this dependency
