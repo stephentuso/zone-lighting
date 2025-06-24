@@ -1,32 +1,22 @@
 """Select platform for zone lighting"""
+
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal, Mapping
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.scene import Scene
-from homeassistant.helpers import entity_platform, service
-from homeassistant.util import slugify
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    STATE_ON,
-)
 
-from .entity import ZoneLightingEntity
-from .coordinator import ZoneLightingCoordinator, MODEL_SCENE
 from .const import (
-    ATTR_PREVIOUS_STATE,
     ATTR_ENTITIES,
-    DOMAIN,
-    SELECT_CONTROLLER,
-    SELECT_SCENE,
-    SERVICE_ROLLBACK_SELECT,
 )
+from .coordinator import MODEL_SCENE, ZoneLightingCoordinator
+from .entity import ZoneLightingEntity
 from .util import get_coordinator, get_scene_unique_id
 
 if TYPE_CHECKING:
@@ -34,6 +24,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -53,10 +44,8 @@ async def async_setup_entry(
         )
         entities = entities + [entity]
 
-    async_add_entities(
-        entities,
-        update_before_add=True
-    )
+    async_add_entities(entities, update_before_add=True)
+
 
 class ZoneLightingScene(ZoneLightingEntity, Scene):
     """Zone Lighting Scene"""
@@ -89,14 +78,18 @@ class ZoneLightingScene(ZoneLightingEntity, Scene):
         self.coordinator.async_set_current_list_val(MODEL_SCENE, self._scene)
 
     async def _async_call_apply(self):
-        await self.hass.services.async_call("scene", "apply", dict(entities=self._entity_states))
+        await self.hass.services.async_call(
+            "scene", "apply", dict(entities=self._entity_states)
+        )
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
 
         if ATTR_ENTITIES in last_state.attributes:
-            self.coordinator.async_set_scene_states(self._scene, last_state.attributes[ATTR_ENTITIES])
+            self.coordinator.async_set_scene_states(
+                self._scene, last_state.attributes[ATTR_ENTITIES]
+            )
 
     @property
     def _entity_states(self):

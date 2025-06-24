@@ -1,74 +1,55 @@
 """Light platform for Zone Lighting"""
+
 from __future__ import annotations
 
-from collections import Counter
-import itertools
 import logging
 import re
-from typing import Any, cast
+from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.group.light import LightGroup
-from homeassistant.util import slugify
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components import light
+from homeassistant.components.group.light import LightGroup
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
-    ATTR_EFFECT_LIST,
     ATTR_FLASH,
     ATTR_HS_COLOR,
-    ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
-    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     ATTR_WHITE,
     ATTR_XY_COLOR,
-    PLATFORM_SCHEMA,
     ColorMode,
-    LightEntity,
     LightEntityFeature,
-    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITIES,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    DOMAIN,
-    CONF_LIGHTS,
-    CONF_SCENES,
     MANUAL,
 )
-from .util import (
-    initialize_with_config,
-    get_coordinator,
+from .coordinator import (
+    MODEL_CONTROLLER,
+    MODEL_SCENE,
+    MODEL_STATE,
+    ZoneLightingCoordinator,
 )
 from .entity import ZoneLightingEntity
-from .coordinator import ZoneLightingCoordinator, MODEL_SCENE, MODEL_CONTROLLER, MODEL_STATE
+from .util import (
+    get_coordinator,
+    initialize_with_config,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -79,12 +60,15 @@ async def async_setup_entry(
     coordinator = get_coordinator(hass, config_entry)
 
     async_add_entities(
-        [LightZone(
-            coordinator,
-            config_entry.entry_id,
-        )],
-        update_before_add=True
+        [
+            LightZone(
+                coordinator,
+                config_entry.entry_id,
+            )
+        ],
+        update_before_add=True,
     )
+
 
 FORWARDED_ATTRIBUTES = frozenset(
     {
@@ -104,11 +88,14 @@ FORWARDED_ATTRIBUTES = frozenset(
 SCENE_PREFIX = "Scene"
 CONTROL_PREFIX = "Control"
 
+
 def add_prefix(prefix: str):
     return lambda val: f"{prefix}: {val}"
 
+
 def show_selected(current_val: str):
     return lambda val: f"{val} ✅" if val == current_val else val
+
 
 class LightZone(ZoneLightingEntity, LightGroup, RestoreEntity):
     """Representation of a light zone"""
@@ -121,20 +108,22 @@ class LightZone(ZoneLightingEntity, LightGroup, RestoreEntity):
         unique_id: str,
     ) -> None:
         ZoneLightingEntity.__init__(self, coordinator)
-        LightGroup.__init__(self, unique_id, coordinator.zone_name, coordinator.light_entity_ids, None)
+        LightGroup.__init__(
+            self, unique_id, coordinator.zone_name, coordinator.light_entity_ids, None
+        )
 
     @property
     def is_manual(self):
         if not self.coordinator.data:
             return False
-        return self.coordinator.data[MODEL_SCENE]['current'] == MANUAL
+        return self.coordinator.data[MODEL_SCENE]["current"] == MANUAL
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
         _LOGGER.debug("%s: last state is %s", self.name, last_state)
-        if (last_state is not None and last_state.state == STATE_ON):
+        if last_state is not None and last_state.state == STATE_ON:
             self.coordinator.async_set_on_state(True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -168,10 +157,10 @@ class LightZone(ZoneLightingEntity, LightGroup, RestoreEntity):
             on_ids = [
                 entity_id
                 for entity_id in self._entity_ids
-                if (state := self.hass.states.get(entity_id)) is not None and state.state == STATE_ON
+                if (state := self.hass.states.get(entity_id)) is not None
+                and state.state == STATE_ON
             ]
             data[ATTR_ENTITY_ID] = on_ids
-            pass
         else:
             data[ATTR_ENTITY_ID] = self._entity_ids
 
@@ -189,7 +178,7 @@ class LightZone(ZoneLightingEntity, LightGroup, RestoreEntity):
         self.coordinator.async_set_on_state(False)
         await LightGroup.async_turn_off(self, **kwargs)
         # if self.is_manual:
-            # return
+        # return
 
         # self.async_update_group_state()
         # self.async_schedule_update_ha_state()
@@ -209,10 +198,23 @@ class LightZone(ZoneLightingEntity, LightGroup, RestoreEntity):
             return
 
         scene_model = self.coordinator.data[MODEL_SCENE]
-        scenes = list(map(add_prefix(SCENE_PREFIX), map(show_selected(scene_model["current"]), scene_model["values"])))
+        scenes = list(
+            map(
+                add_prefix(SCENE_PREFIX),
+                map(show_selected(scene_model["current"]), scene_model["values"]),
+            )
+        )
 
         controller_model = self.coordinator.data[MODEL_CONTROLLER]
-        controllers = list(map(add_prefix(CONTROL_PREFIX), map(show_selected(controller_model["current"]), controller_model["values"])))
+        controllers = list(
+            map(
+                add_prefix(CONTROL_PREFIX),
+                map(
+                    show_selected(controller_model["current"]),
+                    controller_model["values"],
+                ),
+            )
+        )
 
         self._attr_effect_list = scenes + controllers
         self._attr_effect = None

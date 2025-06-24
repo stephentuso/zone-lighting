@@ -1,39 +1,33 @@
 """Provides device triggers for Zone Lighting."""
+
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
-
-import logging
-
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.homeassistant.triggers import state as state_trigger, event as event_trigger
+from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
-    CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    DOMAIN,
-    CONF_EVENT_SCENE,
-    CONF_EVENT_ACTION,
-    CONF_SCENES_EVENT,
     ACTION_ACTIVATE,
     ACTION_DEACTIVATE,
+    CONF_EVENT_ACTION,
+    CONF_EVENT_SCENE,
+    CONF_SCENES_EVENT,
+    DOMAIN,
 )
-from .util import initialize_with_config, filter_conf_list
-
-import homeassistant.helpers.selector as select
+from .util import filter_conf_list, initialize_with_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,16 +62,20 @@ async def async_get_triggers(
                 CONF_PLATFORM: "device",
                 CONF_EVENT_SCENE: scene,
             }
-            triggers.append({
-                **base_trigger,
-                CONF_TYPE: f"Scene {scene} activated",
-                CONF_EVENT_ACTION: ACTION_ACTIVATE,
-            })
-            triggers.append({
-                **base_trigger,
-                CONF_TYPE: f"Scene {scene} deactivated",
-                CONF_EVENT_ACTION: ACTION_DEACTIVATE,
-            })
+            triggers.append(
+                {
+                    **base_trigger,
+                    CONF_TYPE: f"Scene {scene} activated",
+                    CONF_EVENT_ACTION: ACTION_ACTIVATE,
+                }
+            )
+            triggers.append(
+                {
+                    **base_trigger,
+                    CONF_TYPE: f"Scene {scene} deactivated",
+                    CONF_EVENT_ACTION: ACTION_DEACTIVATE,
+                }
+            )
 
     return triggers
 

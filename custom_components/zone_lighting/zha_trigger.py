@@ -1,7 +1,6 @@
 """Provides device automations for ZHA devices that emit events."""
 
 import voluptuous as vol
-
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -28,7 +27,6 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 def _get_device_trigger_data(hass: HomeAssistant, device_id: str) -> tuple[str, dict]:
     """Get device trigger data for a device, falling back to the cache if possible."""
-
     # First, try checking to see if the device itself is accessible
     try:
         zha_device = async_get_zha_device(hass, device_id)
@@ -64,7 +62,6 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-
     try:
         ieee, triggers = _get_device_trigger_data(hass, config[CONF_DEVICE_ID])
     except KeyError as err:
@@ -92,7 +89,8 @@ async def async_attach_trigger(
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
-    """List device triggers.
+    """
+    List device triggers.
 
     Make sure the device supports device automations and return the trigger list.
     """

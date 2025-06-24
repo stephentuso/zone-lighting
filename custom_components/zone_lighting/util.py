@@ -1,36 +1,36 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+import logging
 from copy import deepcopy
 from enum import Enum
-import logging
+from typing import TYPE_CHECKING, Any
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
 )
-from homeassistant.core import (
-    HomeAssistant
-)
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import (
+    CONF_CONTROLLERS,
     CONF_SCENES,
     CONF_SCENES_EVENT,
-    CONF_CONTROLLERS,
     COORDINATOR,
     DOMAIN,
     MANUAL,
+    OPTIONS_LIST,
     SELECT_CONTROLLER,
     SELECT_SCENE,
-    OPTIONS_LIST,
 )
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
+
     from .coordinator import ZoneLightingCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def parse_config(
     config_entry: ConfigEntry | None,
@@ -39,7 +39,12 @@ def parse_config(
 ) -> dict[str, Any]:
     """Get the options and data from the config_entry and add defaults."""
     if defaults is None:
-        data = {key: default for key, default in map(lambda entry: (entry['name'], entry['default']), OPTIONS_LIST)}
+        data = {
+            key: default
+            for key, default in map(
+                lambda entry: (entry["name"], entry["default"]), OPTIONS_LIST
+            )
+        }
     else:
         data = deepcopy(defaults)
 
@@ -57,6 +62,7 @@ def parse_config(
         }
         data.update(changed_settings)
     return data
+
 
 async def initialize_with_config(
     hass: HomeAssistant,
@@ -84,6 +90,7 @@ async def initialize_with_config(
 
     return parse_config(config_entry)
 
+
 def get_coordinator(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -92,9 +99,11 @@ def get_coordinator(
     assert config_entry.entry_id in data
     return data[config_entry.entry_id][COORDINATOR]
 
+
 class ListType(Enum):
     SCENE = 0
     CONTROLLER = 1
+
 
 conf_mapping = {
     ListType.CONTROLLER: [CONF_CONTROLLERS],
@@ -106,11 +115,14 @@ select_mapping = {
     ListType.SCENE: SELECT_SCENE,
 }
 
+
 def filter_conf_list(values: list[str]):
     return list(filter(lambda value: bool(value), values))
 
+
 def get_conf_list_plain(data: dict[str, Any], key: str):
     return filter_conf_list(data[key])
+
 
 def get_conf_list(data: dict[str, Any], type: ListType):
     all_items = [MANUAL]
@@ -119,18 +131,25 @@ def get_conf_list(data: dict[str, Any], type: ListType):
             all_items += get_conf_list_plain(data, param)
     return all_items
 
+
 def validate_list_option(data: dict[str, Any], type: ListType, option: str):
     return option in get_conf_list(data, type)
+
 
 def get_select_for_list(hass: HomeAssistant, entry_id: str, type: ListType):
     return hass.data[DOMAIN][entry_id][select_mapping[type]]
 
+
 def get_current_list_option(hass: HomeAssistant, entry_id: str, type: ListType):
     return get_select_for_list(hass, entry_id, type).current_option
+
 
 def get_scene_unique_id(entry_id: str, scene: str):
     return f"{entry_id}_scene_{scene}"
 
+
 def async_get_scene_entity_id(hass: HomeAssistant, entry_id: str, scene: str):
     registry = er.async_get(hass)
-    return registry.async_get_entity_id("scene", DOMAIN, get_scene_unique_id(entry_id, scene))
+    return registry.async_get_entity_id(
+        "scene", DOMAIN, get_scene_unique_id(entry_id, scene)
+    )

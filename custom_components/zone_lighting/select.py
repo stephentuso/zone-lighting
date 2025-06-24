@@ -1,32 +1,25 @@
 """Select platform for zone lighting"""
+
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal, Mapping
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers import entity_platform, service
-from homeassistant.util import slugify
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.components.select import SelectEntity
 from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    STATE_ON,
-)
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from .entity import ZoneLightingEntity
-from .coordinator import ZoneLightingCoordinator, MODEL_SCENE, MODEL_CONTROLLER
 from .const import (
     ATTR_PREVIOUS_STATE,
-    DOMAIN,
-    SELECT_CONTROLLER,
-    SELECT_SCENE,
     SERVICE_ROLLBACK_SELECT,
 )
+from .coordinator import MODEL_CONTROLLER, MODEL_SCENE, ZoneLightingCoordinator
+from .entity import ZoneLightingEntity
 from .util import get_coordinator
 
 if TYPE_CHECKING:
@@ -34,6 +27,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -48,28 +42,24 @@ async def async_setup_entry(
         unique_id=f"{config_entry.entry_id}_scene",
         name=f"{coordinator.zone_name} Scene",
         icon="mdi:image",
-        type=MODEL_SCENE
+        type=MODEL_SCENE,
     )
     controller_select = ZoneLightingSelect(
         coordinator=coordinator,
         unique_id=f"{config_entry.entry_id}_controller",
         name=f"{coordinator.zone_name} Controller",
         icon="mdi:remote",
-        type=MODEL_CONTROLLER
+        type=MODEL_CONTROLLER,
     )
 
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
-        SERVICE_ROLLBACK_SELECT,
-        dict(),
-        "async_rollback_option"
+        SERVICE_ROLLBACK_SELECT, dict(), "async_rollback_option"
     )
 
-    async_add_entities(
-        [scene_select, controller_select],
-        update_before_add=True
-    )
+    async_add_entities([scene_select, controller_select], update_before_add=True)
+
 
 class ZoneLightingSelect(ZoneLightingEntity, SelectEntity, RestoreEntity):
     """Select for a zone lighting list"""
@@ -108,9 +98,9 @@ class ZoneLightingSelect(ZoneLightingEntity, SelectEntity, RestoreEntity):
 
     def _update_from_coordinator(self):
         list_data = self.coordinator.data[self._list_type]
-        self._attr_options = list_data['values']
-        self._attr_current_option = list_data['current']
-        self._attr_previous_option = list_data['previous']
+        self._attr_options = list_data["values"]
+        self._attr_current_option = list_data["current"]
+        self._attr_previous_option = list_data["previous"]
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -131,7 +121,8 @@ class ZoneLightingSelect(ZoneLightingEntity, SelectEntity, RestoreEntity):
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes.
+        """
+        Return entity specific state attributes.
 
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.

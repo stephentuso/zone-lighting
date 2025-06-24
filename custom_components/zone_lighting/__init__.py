@@ -16,12 +16,13 @@ from .const import (
     DOMAIN,
     UNDO_UPDATE_LISTENER,
 )
-from .util import initialize_with_config
 from .coordinator import ZoneLightingCoordinator
+from .util import initialize_with_config
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["light", "select", "button", "scene"]
+
 
 def _all_unique_names(value):
     """Validate that all entities have a unique profile name."""
@@ -30,10 +31,12 @@ def _all_unique_names(value):
     schema(hosts)
     return value
 
+
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.All(cv.ensure_list, [_DOMAIN_SCHEMA], _all_unique_names)},
     extra=vol.ALLOW_EXTRA,
 )
+
 
 async def reload_configuration_yaml(event: dict, hass: HomeAssistant):  # noqa: ARG001
     """Reload configuration.yaml."""

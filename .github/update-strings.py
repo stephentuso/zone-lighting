@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 
 import homeassistant.helpers.config_validation as cv
-import yaml
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -20,7 +19,9 @@ with strings_fname.open() as f:
 # Set "options"
 data = {}
 data_description = {}
-for k, typ in map(lambda entry: (entry['name'], entry['validator']), const.OPTIONS_LIST):
+for k, typ in map(
+    lambda entry: (entry["name"], entry["validator"]), const.OPTIONS_LIST
+):
     desc = const.DOCS[k]
     if len(desc) > 40 and typ != bool and typ != cv.entity_ids:
         data[k] = k
@@ -32,7 +33,7 @@ strings["options"]["step"]["init"]["data_description"] = data_description
 
 # Set "services"
 # services_filename = Path("custom_components") / "zone_lighting" / "services.yaml"
-# with open(services_filename) as f:  # noqa: PTH123
+# with open(services_filename) as f:
 #     services = yaml.safe_load(f)
 # services_json = {}
 # for service_name, dct in services.items():

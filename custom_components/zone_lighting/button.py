@@ -1,31 +1,17 @@
 """Select platform for zone lighting"""
+
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal, Mapping
+from typing import TYPE_CHECKING
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.helpers import entity_platform, service
-from homeassistant.util import slugify
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.components.button import ButtonEntity
 from homeassistant.core import (
     HomeAssistant,
-    callback,
-)
-from homeassistant.const import (
-    CONF_NAME,
-    STATE_ON,
 )
 
+from .coordinator import ZoneLightingCoordinator
 from .entity import ZoneLightingEntity
-from .coordinator import ZoneLightingCoordinator, MODEL_SCENE, MODEL_CONTROLLER
-from .const import (
-    ATTR_PREVIOUS_STATE,
-    DOMAIN,
-    SELECT_CONTROLLER,
-    SELECT_SCENE,
-    SERVICE_ROLLBACK_SELECT,
-)
 from .util import get_coordinator
 
 if TYPE_CHECKING:
@@ -33,6 +19,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -48,10 +35,8 @@ async def async_setup_entry(
         icon="mdi:content-save",
     )
 
-    async_add_entities(
-        [save_scene_button],
-        update_before_add=True
-    )
+    async_add_entities([save_scene_button], update_before_add=True)
+
 
 class SaveSceneButton(ZoneLightingEntity, ButtonEntity):
     """Button to save the current scene state"""

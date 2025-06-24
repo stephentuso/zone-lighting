@@ -1,10 +1,11 @@
 """ZoneLightingEntity class."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, NAME, DEVICE_VERSION
+from .const import DEVICE_VERSION, DOMAIN, NAME
 from .coordinator import ZoneLightingCoordinator
 
 

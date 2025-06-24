@@ -1,42 +1,40 @@
 """DataUpdateCoordinator for Zone Lighting."""
+
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, CoreState
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry, entity_registry
-from homeassistant.helpers.debounce import Debouncer
-from homeassistant.util import slugify
 from homeassistant.const import (
     CONF_DEVICE_ID,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+)
+from homeassistant.util import slugify
 
 from .const import (
-    CONF_NAME,
+    ACTION_ACTIVATE,
+    ACTION_DEACTIVATE,
+    CONF_EVENT_ACTION,
+    CONF_EVENT_SCENE,
     CONF_LIGHTS,
+    CONF_NAME,
     CONF_SCENES,
     CONF_SCENES_EVENT,
     DOMAIN,
-    CONF_EVENT_SCENE,
-    CONF_EVENT_ACTION,
-    ACTION_ACTIVATE,
-    ACTION_DEACTIVATE,
     ZONE_LIGHTING_EVENT,
 )
 from .util import (
-    ListType,
     MANUAL,
+    ListType,
+    async_get_scene_entity_id,
     get_conf_list,
     get_conf_list_plain,
-    async_get_scene_entity_id,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +43,7 @@ MODEL_SCENE = "scene"
 MODEL_CONTROLLER = "controller"
 MODEL_STATE = "on_state"
 MODEL_SCENE_STATES = "scene_states"
+
 
 class ZoneLightingCoordinator(DataUpdateCoordinator):
     """Class to manage data"""
@@ -98,13 +97,17 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
     def light_entity_ids(self):
         if not self._light_entity_ids:
             registry = entity_registry.async_get(self.hass)
-            self._light_entity_ids = entity_registry.async_validate_entity_ids(registry, self.config_data[CONF_LIGHTS])
+            self._light_entity_ids = entity_registry.async_validate_entity_ids(
+                registry, self.config_data[CONF_LIGHTS]
+            )
         return self._light_entity_ids
 
     @property
     def device_id(self):
         if not self._device_id:
-            entry = device_registry.async_get(self.hass).async_get_device(self.device_identifiers)
+            entry = device_registry.async_get(self.hass).async_get_device(
+                self.device_identifiers
+            )
             if entry:
                 self._device_id = entry.id
         return self._device_id
@@ -139,11 +142,14 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
     def _async_fire_scene_event(self, action: str, scene: str):
         if not self.device_id:
             return
-        self.hass.bus.async_fire(ZONE_LIGHTING_EVENT, {
-            CONF_DEVICE_ID: self.device_id,
-            CONF_EVENT_ACTION: action,
-            CONF_EVENT_SCENE: scene
-        })
+        self.hass.bus.async_fire(
+            ZONE_LIGHTING_EVENT,
+            {
+                CONF_DEVICE_ID: self.device_id,
+                CONF_EVENT_ACTION: action,
+                CONF_EVENT_SCENE: scene,
+            },
+        )
 
     def _get_saved_scene_id(self, scene):
         return f"zone_lighting_{slugify(self.zone_name)}_{slugify(scene)}"
@@ -184,13 +190,15 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
             "scene_id": self._get_saved_scene_id(scene),
             "snapshot_entities": self.light_entity_ids,
         }
-        await self.hass.services.async_call("scene", "create", data),
+        (await self.hass.services.async_call("scene", "create", data),)
 
     async def _async_restore_scene_state(self, scene):
         _LOGGER.debug(f"Restoring scene state: {scene}")
         # target = dict(entity_id=f"scene.{self._get_saved_scene_id(scene)}")
         # await self.hass.services.async_call("scene", "turn_on", target=target)
-        entity_id = async_get_scene_entity_id(self.hass, self.config_entry.entry_id, scene)
+        entity_id = async_get_scene_entity_id(
+            self.hass, self.config_entry.entry_id, scene
+        )
         _LOGGER.debug(entity_id)
         if not entity_id:
             _LOGGER.debug("Can't save, no entity id")
@@ -201,19 +209,22 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
 
     def async_set_on_state(self, on: bool):
         self._model[MODEL_STATE] = on
-        self._async_handle_scene_action(ACTION_ACTIVATE if on else ACTION_DEACTIVATE, self._model[MODEL_SCENE]["current"])
+        self._async_handle_scene_action(
+            ACTION_ACTIVATE if on else ACTION_DEACTIVATE,
+            self._model[MODEL_SCENE]["current"],
+        )
         self._async_data_changed()
 
     def async_set_current_list_val(self, type: str, value: str):
         list_model = self._model[type]
-        if value not in list_model['values']:
+        if value not in list_model["values"]:
             return
 
-        if value == list_model['current']:
+        if value == list_model["current"]:
             return
 
-        list_model['previous'] = list_model['current']
-        list_model['current'] = value
+        list_model["previous"] = list_model["current"]
+        list_model["current"] = value
 
         if type == MODEL_SCENE and self._model[MODEL_STATE]:
             self._save_current_scene_debouncer.async_cancel()
@@ -223,14 +234,14 @@ class ZoneLightingCoordinator(DataUpdateCoordinator):
 
     def async_set_previous_list_val(self, type: str, value: str):
         list_model = self._model[type]
-        if value not in list_model['values']:
+        if value not in list_model["values"]:
             return
-        list_model['previous'] = value
+        list_model["previous"] = value
         self._async_data_changed()
 
     def async_rollback_list_val(self, type: str):
         list_model = self._model[type]
-        self.async_set_current_list_val(type, list_model['previous'])
+        self.async_set_current_list_val(type, list_model["previous"])
 
     def get_scene_states(self, scene: str):
         if not self.data:

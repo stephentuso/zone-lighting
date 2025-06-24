@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any, TypedDict
 
-import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.selector as select
+import voluptuous as vol
 
 NAME = "Zone Lighting"
 DOMAIN = "zone_lighting"
@@ -29,6 +29,7 @@ DOCS[CONF_SCENES_EVENT] = "Scenes that will be handled by automations"
 CONF_CONTROLLERS, DEFAULT_CONTROLLERS = "controllers", [""]
 DOCS[CONF_CONTROLLERS] = "Controllers for this zone"
 
+
 class OptionParams(TypedDict):
     name: str
     default: Any
@@ -36,6 +37,7 @@ class OptionParams(TypedDict):
     ui: Any
     required: bool
     schema_key: Any
+
 
 def opt(name, default, validator, ui=None, required=False):
     ui = validator if ui is None else ui
@@ -45,48 +47,59 @@ def opt(name, default, validator, ui=None, required=False):
         validator=validator,
         ui=ui,
         required=required,
-        schema_key=vol.Required(name, default=default) if required else vol.Optional(name, default=default),
+        schema_key=vol.Required(name, default=default)
+        if required
+        else vol.Optional(name, default=default),
     )
+
 
 OPTIONS_LIST = [
     opt(
         CONF_LIGHTS,
         DEFAULT_LIGHTS,
         cv.entity_ids,
-        select.EntitySelector(select.EntitySelectorConfig(
-            domain="light",
-            multiple=True,
-        )),
+        select.EntitySelector(
+            select.EntitySelectorConfig(
+                domain="light",
+                multiple=True,
+            )
+        ),
         True,
     ),
     opt(
         CONF_SCENES,
         DEFAULT_SCENES,
         cv.ensure_list,
-        select.TextSelector(select.TextSelectorConfig(
-            multiple=True,
-            type=select.TextSelectorType.TEXT,
-        )),
+        select.TextSelector(
+            select.TextSelectorConfig(
+                multiple=True,
+                type=select.TextSelectorType.TEXT,
+            )
+        ),
         True,
     ),
     opt(
         CONF_SCENES_EVENT,
         DEFAULT_SCENES_EVENT,
         cv.ensure_list,
-        select.TextSelector(select.TextSelectorConfig(
-            multiple=True,
-            type=select.TextSelectorType.TEXT,
-        )),
+        select.TextSelector(
+            select.TextSelectorConfig(
+                multiple=True,
+                type=select.TextSelectorType.TEXT,
+            )
+        ),
         False,
     ),
     opt(
         CONF_CONTROLLERS,
         DEFAULT_CONTROLLERS,
         cv.ensure_list,
-        select.TextSelector(select.TextSelectorConfig(
-            multiple=True,
-            type=select.TextSelectorType.TEXT,
-        )),
+        select.TextSelector(
+            select.TextSelectorConfig(
+                multiple=True,
+                type=select.TextSelectorType.TEXT,
+            )
+        ),
         True,
     ),
 ]
@@ -114,6 +127,8 @@ SERVICE_ROLLBACK_SELECT = "rollback_select"
 _DOMAIN_SCHEMA = vol.Schema(
     {
         key: validator
-        for key, validator in map(lambda entry: (entry['schema_key'], entry['validator']), OPTIONS_LIST)
+        for key, validator in map(
+            lambda entry: (entry["schema_key"], entry["validator"]), OPTIONS_LIST
+        )
     },
 )
