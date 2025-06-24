@@ -60,7 +60,7 @@ def parse_config(
 
 async def initialize_with_config(
     hass: HomeAssistant,
-    config_entry: ConfigEntry | None,
+    config_entry: ConfigEntry,
 ) -> dict[str, Any] | None:
     """Initialize Zone Lighting config entry."""
     data = hass.data[DOMAIN]
@@ -86,7 +86,7 @@ async def initialize_with_config(
 
 def get_coordinator(
     hass: HomeAssistant,
-    config_entry: ConfigEntry | None,
+    config_entry: ConfigEntry,
 ) -> ZoneLightingCoordinator:
     data = hass.data[DOMAIN]
     assert config_entry.entry_id in data

@@ -10,3 +10,5 @@ logger:
   default: error
   logs:
     custom_components.zone_lighting: debug
+
+demo:

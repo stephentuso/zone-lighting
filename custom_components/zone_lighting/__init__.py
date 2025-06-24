@@ -65,12 +65,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     undo_listener = config_entry.add_update_listener(async_update_options)
     data[config_entry.entry_id] = {UNDO_UPDATE_LISTENER: undo_listener}
     config_data = await initialize_with_config(hass, config_entry)
+    if config_data is None:
+        return True
+
     coordinator = ZoneLightingCoordinator(hass, config_data)
     data[config_entry.entry_id][COORDINATOR] = coordinator
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform),
-        )
+
+    # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
+    await coordinator.async_config_entry_first_refresh()
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
